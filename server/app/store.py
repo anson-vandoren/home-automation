@@ -1,5 +1,6 @@
 import csv
 import datetime
+import os
 
 CSV_FILE = "./readings.csv"
 
@@ -16,6 +17,8 @@ class CSVStore:
 
     @classmethod
     def get_last_reading(cls, desired_sensor_name):
+        if not os.path.exists(cls.filename):
+            return None
         with open(cls.filename, "r") as csv_file:
             for row in csv_file.readlines()[-2:]:
                 timestamp, sensor_name, temperature, humidity = row.split(",")
