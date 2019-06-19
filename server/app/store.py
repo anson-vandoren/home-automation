@@ -20,7 +20,7 @@ class CSVStore:
         if not os.path.exists(cls.filename):
             return None
         with open(cls.filename, "r") as csv_file:
-            for row in csv_file.readlines()[-2:]:
+            for row in reversed(csv_file.readlines()):
                 timestamp, sensor_name, temperature, humidity = row.split(",")
                 if sensor_name == desired_sensor_name:
                     return {
