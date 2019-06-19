@@ -1,0 +1,32 @@
+{% extends "base.html" %} {% block content %}
+<style>
+  table,
+  th,
+  td {
+    border: 1px solid black;
+    border-collapse: collapse;
+  }
+  th {
+    text-align: left;
+  }
+</style>
+
+<table>
+  <tr>
+    <th>Timestamp (UTC)</th>
+    <th>Sensor Name</th>
+    <th>Temperature (C)</th>
+    <th>Humidity (%)</th>
+  </tr>
+
+  {% for row in rows %}
+  <tr>
+    <td>{{ row.timestamp }}</td>
+    <td>{{ row.sensor_name }}</td>
+    <td>{{ row.temperature }}</td>
+    <td>{{ row.humidity }}</td>
+  </tr>
+  {% endfor %}
+</table>
+
+{% endblock %}

@@ -1,5 +1,6 @@
-from flask import abort, jsonify, render_template, request
+from flask import abort, flash, jsonify, redirect, render_template, request, url_for
 from app import app
+from app.forms import LoginForm
 from app.store import CSVStore
 
 
@@ -30,4 +31,21 @@ def update_from_sensor():
     CSVStore.add_sensor_reading(sensor_name, temp, humidity)
 
     sensor_name = request.json["sensor_name"]
-    return jsonify({"sensor_name": sensor_name}), 200
+    return jsonify({"status": "success"}), 200
+
+
+@app.route("/login", methods=["GET", "POST"])
+def login():
+    form = LoginForm()
+    if form.validate_on_submit():
+        flash(
+            f"Login requested for user {form.username.data}, remember_me={form.remember_me.data}"
+        )
+        return redirect(url_for("index"))
+    return render_template("login.html", title="Sign In", form=form)
+
+
+@app.route("/raw_readings")
+def raw_readings():
+    all_readings = CSVStore.get_all()
+    return render_template("raw_data.html", title="Raw Readings", rows=all_readings)

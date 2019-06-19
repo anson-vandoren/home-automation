@@ -31,3 +31,22 @@ class CSVStore:
                     }
             else:
                 return None
+
+    @classmethod
+    def get_all(cls):
+        if not os.path.exists(cls.filename):
+            return None
+        with open(cls.filename, "r") as csv_file:
+            ret_data = []
+            for row in csv_file.readlines():
+                timestamp, sensor_name, temperature, humidity = row.split(",")
+                ret_data.append(
+                    {
+                        "timestamp": timestamp,
+                        "sensor_name": sensor_name,
+                        "temperature": temperature,
+                        "humidity": humidity,
+                    }
+                )
+
+            return ret_data
