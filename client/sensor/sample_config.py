@@ -6,6 +6,8 @@ WEBHOOK_URL = "http://example.com/api/update_temperature"
 DHT_PIN = 4  # D2
 LED_PIN = 2  # D4
 DEBUG_PIN = 14  # D5
+DISPLAY_SCL_PIN = 0  # D3
+DISPLAY_SDA_PIN = 12  # D6
 
 LOG_INTERVAL = 60
 
