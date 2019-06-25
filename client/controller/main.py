@@ -10,6 +10,8 @@ import writer
 
 
 _WIDTH = 128
+_HEIGHT = 64
+_MENU_WIDTH = 32
 
 # set up rotary encoder
 r_temp = Rotary(
@@ -20,64 +22,56 @@ r_temp = Rotary(
     range_mode=Rotary.RANGE_BOUNDED,
     enabled=False,
 )
-r_menu = Rotary(
-    pin_clk=PIN_CLK,
-    pin_dt=PIN_DT,
-    min_val=0,
-    max_val=3,
-    range_mode=Rotary.RANGE_WRAP,
-    enabled=True,
-)
 
-
+# initialize display
 i2c = machine.I2C(scl=machine.Pin(DISPLAY_SCL), sda=machine.Pin(DISPLAY_SDA))
 display = ssd1306.SSD1306_I2C(128, 64, i2c)
 # set display to partial brightness
-disp_contrast = 100
-display.contrast(disp_contrast)
+display.contrast(80)
 
 small_font_writer = writer.Writer(display, small_font)
 large_font_writer = writer.Writer(display, large_font)
 
 lastval = r_temp.value()
 
-is_menu = True
-curr_sel = 1
-r_menu.value(curr_sel)
+do_set = False
 
+last_click_millis = utime.ticks_ms()
 
-_SEL_MENU = 0
-_SEL_SET = 1
-_MENU_WIDTH = 32
-
-last_sw_click_millis = utime.ticks_ms()
+current_temp = 83
+setpoint_temp = 75
+is_upstairs = True
 
 
 def rotary_switch(pin):
-    global is_menu, last_sw_click_millis
+    global last_click_millis, do_set, setpoint_temp, is_upstairs
     # debounce switch click
-    if utime.ticks_diff(utime.ticks_ms(), last_sw_click_millis) > 100:
-        is_menu = not is_menu
-        last_sw_click_millis = utime.ticks_ms()
-        if r_temp.is_enabled:
-            # switch to menu
-            r_temp.disable()
-            r_menu.enable()
+    if utime.ticks_diff(utime.ticks_ms(), last_click_millis) > 200:
+        do_set = not do_set
+        last_click_millis = utime.ticks_ms()
 
-            clear_control_area()
-            draw_menu_box(color=1)
-
-            display.show()
-        else:
-            # switch to control
-            r_menu.disable()
+        if do_set:
+            # TODO: update setpoint temp from web somewhere
             r_temp.enable()
-
-            draw_menu_box(color=0)
+            r_temp.value(setpoint_temp)
+            # draw setpoint temp
             write_temp(r_temp.value())
+            # draw box around temperature
             draw_control_box(color=1)
+        else:
+            is_upstairs = not is_upstairs
+            # remove box around temperature
+            draw_control_box(color=0)
+            # disable rotary encoder
+            setpoint_temp = r_temp.value()
+            r_temp.disable()
+            # TODO: write new setpoint to server
+            # TODO: poll actual temperature
+            # draw actual temperature
+            write_temp(current_temp)
+            write_menu()
 
-            display.show()
+        display.show()
 
 
 # set up rotary encoder switch
@@ -98,16 +92,6 @@ def write_temp(val):
     large_font_writer.printstring(temp_str)
 
 
-def draw_menu_box(color=1):
-    top = curr_sel * 16
-    bottom = top + 15
-
-    display.hline(0, top, _MENU_WIDTH, color)
-    display.hline(0, bottom, _MENU_WIDTH, color)
-    display.vline(0, top, 16, color)
-    display.vline(_MENU_WIDTH, top, 16, color)
-
-
 def draw_control_box(color=1):
     display.rect(_MENU_WIDTH, 0, (128 - _MENU_WIDTH), 64, color)
 
@@ -117,22 +101,19 @@ def clear_control_area():
 
 
 def write_menu():
-    print("writing menu text")
     display.fill_rect(0, 0, _MENU_WIDTH, 64, 0)
 
     # set menu
-    labels = ["SET", "75F", "HUM", "45%"]
+    labels = ["SET", str(setpoint_temp) + "F", "HUM", "45%"]
     for i, menu_label in enumerate(labels):
         str_len = small_font_writer.stringlen(menu_label)
         str_left = 1 + (_MENU_WIDTH - str_len) // 2
         small_font_writer.set_textpos(str_left, i * 16)
         small_font_writer.printstring(menu_label)
 
-    # draw selected element
-    draw_menu_box(color=1)
-
 
 write_menu()
+write_temp(current_temp)
 display.show()
 
 while True:
@@ -140,23 +121,12 @@ while True:
         val = r_temp.value()
         if val != lastval:
             lastval = val
-            print("updating control")
 
             write_temp(val)
             draw_control_box(color=1)
             display.show()
-
-    elif r_menu.is_enabled:
-        new_menu_val = r_menu.value()
-        if curr_sel != new_menu_val:
-            print("updating menu")
-            # remove old selection box
-            draw_menu_box(color=0)
-            # update to new selection
-            curr_sel = new_menu_val
-            # draw new selection box
-            draw_menu_box(color=1)
-            # flip display buffer
-            display.show()
+    else:
+        # TODO: poll current temperature periodically
+        pass
 
     utime.sleep_ms(50)
