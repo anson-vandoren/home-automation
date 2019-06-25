@@ -4,14 +4,10 @@ import machine
 from rotary import Rotary
 from config import *
 
-import roboto16 as small_font
+import small_font as small_font
 import roboto48 as large_font
 import writer
 
-
-_WIDTH = 128
-_HEIGHT = 64
-_MENU_WIDTH = 32
 
 # set up rotary encoder
 r_temp = Rotary(
@@ -27,7 +23,7 @@ r_temp = Rotary(
 i2c = machine.I2C(scl=machine.Pin(DISPLAY_SCL), sda=machine.Pin(DISPLAY_SDA))
 display = ssd1306.SSD1306_I2C(128, 64, i2c)
 # set display to partial brightness
-display.contrast(80)
+display.contrast(1)
 
 small_font_writer = writer.Writer(display, small_font)
 large_font_writer = writer.Writer(display, large_font)
@@ -81,10 +77,10 @@ r_sw.irq(trigger=machine.Pin.IRQ_RISING, handler=rotary_switch)
 
 def write_temp(val):
 
-    temp_str = str(val) + "°"
+    temp_str = "{0:s}°".format(str(val))
     temp_str_len = large_font_writer.stringlen(temp_str)
 
-    temp_str_left = _MENU_WIDTH + (_WIDTH - temp_str_len - _MENU_WIDTH) // 2
+    temp_str_left = MENU_WIDTH + (CONTROL_WIDTH - temp_str_len) // 2
     # the degree character renders too wide in chosen font. remove some rpad
     temp_str_left += 4
 
@@ -93,21 +89,21 @@ def write_temp(val):
 
 
 def draw_control_box(color=1):
-    display.rect(_MENU_WIDTH, 0, (128 - _MENU_WIDTH), 64, color)
+    display.rect(MENU_WIDTH, 0, (128 - MENU_WIDTH), 64, color)
 
 
 def clear_control_area():
-    display.fill_rect(_MENU_WIDTH, 0, (128 - _MENU_WIDTH), 64, 0)
+    display.fill_rect(MENU_WIDTH, 0, (128 - MENU_WIDTH), 64, 0)
 
 
 def write_menu():
-    display.fill_rect(0, 0, _MENU_WIDTH, 64, 0)
+    display.fill_rect(0, 0, MENU_WIDTH, 64, 0)
 
     # set menu
-    labels = ["SET", str(setpoint_temp) + "F", "HUM", "45%"]
+    labels = ["SET", str(setpoint_temp) + "F", "RH", "45%"]
     for i, menu_label in enumerate(labels):
         str_len = small_font_writer.stringlen(menu_label)
-        str_left = 1 + (_MENU_WIDTH - str_len) // 2
+        str_left = 1 + (MENU_WIDTH - str_len) // 2
         small_font_writer.set_textpos(str_left, i * 16)
         small_font_writer.printstring(menu_label)
 
