@@ -81,6 +81,7 @@ def get_current_temp():
                 "location": current_temp["location"],
                 "timestamp": utc_timestamp,
                 "temperature": current_temp["temperature"],
+                "humidity": current_temp["humidity"],
             }
         ),
         200,
