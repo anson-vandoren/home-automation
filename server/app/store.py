@@ -1,6 +1,7 @@
 import csv
 import datetime
 import os
+from app import app
 
 CSV_FILE = "./readings.csv"
 
@@ -12,7 +13,7 @@ class CSVStore:
     def add_sensor_reading(cls, sensor_name, temperature, humidity):
         with open(cls.filename, "a") as csv_file:
             writer = csv.writer(csv_file, delimiter=",")
-            timestamp = datetime.datetime.utcnow().strftime(r"%Y-%m-%d %H:%M:%S")
+            timestamp = datetime.datetime.utcnow().strftime(app.config["TIME_FORMAT"])
             writer.writerow([timestamp, sensor_name, temperature, humidity])
 
     @classmethod
@@ -22,7 +23,7 @@ class CSVStore:
         with open(cls.filename, "r") as csv_file:
             for row in reversed(csv_file.readlines()):
                 timestamp, sensor_name, temperature, humidity = row.split(",")
-                if sensor_name == desired_sensor_name:
+                if sensor_name == desired_sensor_name or desired_sensor_name is None:
                     return {
                         "location": sensor_name,
                         "timestamp": timestamp,

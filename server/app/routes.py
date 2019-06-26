@@ -3,6 +3,9 @@ from app import app
 from app.forms import LoginForm
 from app.store import CSVStore
 
+import datetime
+import pytz
+
 
 @app.route("/")
 @app.route("/index")
@@ -49,3 +52,36 @@ def login():
 def raw_readings():
     all_readings = CSVStore.get_all()
     return render_template("raw_data.html", title="Raw Readings", rows=all_readings)
+
+
+@app.route("/current_temp")
+def get_current_temp():
+    sensor_name = request.args.get("sensorName", None)
+    current_temp = CSVStore.get_last_reading(sensor_name)
+
+    if current_temp is None:
+        return (
+            jsonify(
+                {
+                    "status": "failed",
+                    "message": f"Could not find current temperature for sensor {sensor_name}",
+                }
+            ),
+            400,
+        )
+
+    timestamp = current_temp["timestamp"]
+    utc_timestamp = pytz.utc.localize(
+        datetime.datetime.strptime(timestamp, app.config["TIME_FORMAT"])
+    ).isoformat()
+
+    return (
+        jsonify(
+            {
+                "location": current_temp["location"],
+                "timestamp": utc_timestamp,
+                "temperature": current_temp["temperature"],
+            }
+        ),
+        200,
+    )
