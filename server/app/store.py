@@ -1,9 +1,50 @@
 import csv
 import datetime
+import json
 import os
 from app import app
 
 CSV_FILE = "./readings.csv"
+SETTINGS_FILE = "./settings.json"
+
+
+class SettingsStore:
+    filename = SETTINGS_FILE
+    DEFAULT_STORE = {"setpoint": 72}
+
+    @classmethod
+    def temp_setpoint(cls, new_setpoint=None):
+        if not os.path.exists(cls.filename):
+            cls.create_default_store()
+
+        with open(cls.filename, "r") as json_file:
+            settings = json.load(json_file)
+
+        if new_setpoint is None:
+            # return current setpoint
+            return settings.get("setpoint", cls.DEFAULT_STORE["setpoint"])
+        else:
+            try:
+                new_setpoint = int(new_setpoint)
+            except ValueError:
+                return None
+
+            # validate/clamp setpoint
+            new_setpoint = max(
+                app.config["SETPOINT_MIN"],
+                min(app.config["SETPOINT_MAX"], new_setpoint),
+            )
+
+            settings["setpoint"] = new_setpoint
+            with open(cls.filename, "w") as json_file:
+                json.dump(settings, json_file)
+
+            return new_setpoint
+
+    @classmethod
+    def create_default_store(cls):
+        with open(cls.filename, "w") as json_file:
+            json.dump(cls.DEFAULT_STORE, json_file)
 
 
 class CSVStore:

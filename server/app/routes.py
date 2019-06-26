@@ -1,7 +1,7 @@
 from flask import abort, flash, jsonify, redirect, render_template, request, url_for
 from app import app
 from app.forms import LoginForm
-from app.store import CSVStore
+from app.store import CSVStore, SettingsStore
 
 import datetime
 import pytz
@@ -19,6 +19,7 @@ def index():
 
 @app.route("/sensor/add_reading", methods=["POST"])
 def update_from_sensor():
+    # TODO: add authentication
     if (
         not request.json
         or "sensor_name" not in request.json
@@ -86,3 +87,53 @@ def get_current_temp():
         ),
         200,
     )
+
+
+@app.route("/temp_setpoint", methods=["GET", "POST"])
+def temp_setpoint():
+    if request.method == "GET":
+        current_setpoint = SettingsStore.temp_setpoint()
+        return jsonify({"setpoint": current_setpoint}), 200
+    elif request.method == "POST":
+        new_setpoint = request.json.get("newSetpoint", None)
+        if new_setpoint is None:
+            return (
+                jsonify(
+                    {"status": "failed", "message": "must include newSetpoint for POST"}
+                ),
+                400,
+            )
+
+        result = SettingsStore.temp_setpoint(new_setpoint)
+        if result is None:
+            return (
+                jsonify(
+                    {
+                        "status": "failed",
+                        "message": f"could not change setpoint to {new_setpoint}",
+                    }
+                ),
+                400,
+            )
+
+        if result != new_setpoint:
+            return (
+                jsonify(
+                    {
+                        "status": "modified",
+                        "message": f"requested setpoint ({new_setpoint}) out of bounds. used {result} as setpoint instead",
+                    }
+                ),
+                200,
+            )
+
+        return (
+            jsonify(
+                {
+                    "status": "success",
+                    "message": "successfully changed temperature setpoint",
+                    "setpoint": result,
+                }
+            ),
+            200,
+        )
