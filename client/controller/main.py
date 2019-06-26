@@ -1,6 +1,7 @@
 import utime
 import ssd1306
 import machine
+import network
 from rotary import Rotary
 from config import *
 
@@ -34,15 +35,23 @@ do_set = False
 
 last_click_millis = utime.ticks_ms()
 
+last_temp_poll_millis = utime.ticks_ms()
+temp_poll_duration = 60 * 1000  # one minute
+
 current_temp = 83
 setpoint_temp = 75
 is_upstairs = True
 
 
+def time_elapsed(last_time, elapsed_time):
+    """returns true of it's been `elapsed_time` since `last_time`"""
+    return utime.ticks_diff(utime.ticks_ms(), last_time) > elapsed_time
+
+
 def rotary_switch(pin):
     global last_click_millis, do_set, setpoint_temp, is_upstairs
     # debounce switch click
-    if utime.ticks_diff(utime.ticks_ms(), last_click_millis) > 200:
+    if time_elapsed(last_click_millis, 200):
         do_set = not do_set
         last_click_millis = utime.ticks_ms()
 
@@ -112,7 +121,23 @@ write_menu()
 write_temp(current_temp)
 display.show()
 
+
+def connect_wifi():
+    ap_if = network.WLAN(network.AP_IF)
+    ap_if.active(False)
+
+    sta_if = network.WLAN(network.STA_IF)
+    if not sta_if.isconnected():
+        print("Connecting to WiFi...")
+        sta_if.active(True)
+        sta_if.connect(WIFI_SSID, WIFI_PASSWORD)
+        while not sta_if.isconnected():
+            utime.sleep_ms(1000)
+    print("Network connected:", sta_if.ifconfig())
+
+
 while True:
+    # TODO: if inadvertently left on setting control, go back to normal after some time
     if r_temp.is_enabled:
         val = r_temp.value()
         if val != lastval:
@@ -123,6 +148,7 @@ while True:
             display.show()
     else:
         # TODO: poll current temperature periodically
-        pass
+        if time_elapsed(last_temp_poll_millis, temp_poll_duration):
+            ...
 
     utime.sleep_ms(50)
