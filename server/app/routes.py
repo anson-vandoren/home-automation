@@ -116,12 +116,13 @@ def temp_setpoint():
                 400,
             )
 
-        if result != new_setpoint:
+        if result != int(new_setpoint):
             return (
                 jsonify(
                     {
                         "status": "modified",
                         "message": f"requested setpoint ({new_setpoint}) out of bounds. used {result} as setpoint instead",
+                        "setpoint": result,
                     }
                 ),
                 200,
