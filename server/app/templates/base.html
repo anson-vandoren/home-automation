@@ -5,6 +5,7 @@
     {% else %}
     <title>Automated Home</title>
     {% endif %}
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='styles/base.css') }}"
   </head>
   <body>
     <div>
@@ -19,6 +20,6 @@
       <li>{{ message }}</li>
       {% endfor %}
     </ul>
-    {% endif %} {% endwith %} {% block content %}{% endblock %}
+    {% endif %} {% endwith %} <main>{% block content %}{% endblock %}</main>
   </body>
 </html>

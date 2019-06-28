@@ -3,6 +3,7 @@ from app import app
 from app.forms import LoginForm
 from app.store import CSVStore, SettingsStore
 
+import copy
 import datetime
 import pytz
 
@@ -20,7 +21,13 @@ def index():
         )
     ).isoformat()
     office_sensor["timestamp"] = utc_timestamp
-    return render_template("index.html", sensors=[office_sensor])
+    # TODO: remove synthetic data
+
+    bedroom_sensor = copy.copy(office_sensor)
+    bedroom_sensor["location"] = "bedroom"
+    bedroom_sensor["temperature"] = "35"
+
+    return render_template("index.html", sensors=[office_sensor, bedroom_sensor])
 
 
 @app.route("/sensor/add_reading", methods=["POST"])

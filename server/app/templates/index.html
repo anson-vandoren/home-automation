@@ -1,14 +1,44 @@
 {% extends "base.html" %} {% block content %}
-<h1>Temperature Sensors</h1>
-<ul>
-  {% for sensor in sensors %}
-  <li>{{ sensor.location }}</li>
-  <ul>
-    <li>Last updated: {{ sensor.timestamp }}</li>
-    <li>Temperature: {{ sensor.temperature }}C</li>
-    <li>Humidity: {{ sensor.humidity }}%</li>
-  </ul>
-  {% endfor %}
-</ul>
 
+<h1 style="text-align: center;">Temperature Sensors</h1>
+
+{% for sensor in sensors %}
+<table align="center">
+  <thead>
+    <tr>
+      <th colspan="2">{{ sensor.location.title() }}</th>
+    </tr>
+  </thead>
+  <tr>
+    <td colspan="2">
+      <i
+        ><span class="updatedTime" id="{{ sensor.location }}">{{
+          sensor.timestamp
+        }}</span></i
+      >
+    </td>
+  </tr>
+  <tr>
+    <td>{{ sensor.temperature }}°C</td>
+    <td>{{ sensor.humidity }}%RH</td>
+  </tr>
+</table>
+
+{% endfor %}
+
+<script>
+  // convert last updated date to local date. comes from server as UTC
+  document.addEventListener('DOMContentLoaded', () => {
+    const timeElements = document.getElementsByClassName('updatedTime');
+    Array.prototype.forEach.call(timeElements, (el) => {
+      console.log(el);
+      const timestr = el.innerHTML;
+      const timeid = el.id;
+      const localizedDate = new Date(timestr).toLocaleString('en-US', {
+        timeZoneName: 'short',
+      });
+      document.getElementById(timeid).innerHTML = localizedDate;
+    });
+  });
+</script>
 {% endblock %}
