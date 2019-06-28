@@ -27,13 +27,15 @@ body {
 }
 
 main {
-  max-width: 90ch;
+  max-width: 77ch;
   margin: auto;
 }
 
 table {
   border: 1px solid #27586b;
   margin: 5px auto;
+  padding: 5px;
+  width: 30ch;
 }
 
 td {
@@ -63,4 +65,8 @@ td {
 .topnav a.active {
   background-color: #27586b;
   color: white;
+}
+
+.updatedTime {
+  font-style: italic;
 }

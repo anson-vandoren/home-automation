@@ -3,21 +3,18 @@
 <h1 style="text-align: center;">Temperature</h1>
 
 {% for sensor in sensors %}
-<table align="center">
+<table>
   <thead>
     <tr>
-      <th colspan="2">{{ sensor.location.title() }}</th>
+      <th colspan="2">
+        {{ sensor.location.title() }} -
+        <span class="updatedTime" id="{{ sensor.location }}"
+          >{{ sensor.timestamp }}</span
+        >
+      </th>
     </tr>
   </thead>
-  <tr>
-    <td colspan="2">
-      <i
-        ><span class="updatedTime" id="{{ sensor.location }}"
-          >{{ sensor.timestamp }}</span
-        ></i
-      >
-    </td>
-  </tr>
+  <tr></tr>
   <tr>
     <td>{{ sensor.temperature }}°C</td>
     <td>{{ sensor.humidity }}%RH</td>
