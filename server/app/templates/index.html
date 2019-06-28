@@ -16,7 +16,7 @@
   </thead>
   <tr></tr>
   <tr>
-    <td>{{ sensor.temperature }}°C</td>
+    <td>{{ ((sensor.temperature | float) * 9 / 5 + 32) | int }}°F</td>
     <td>{{ sensor.humidity }}%RH</td>
   </tr>
 </table>
