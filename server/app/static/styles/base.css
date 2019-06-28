@@ -1,3 +1,21 @@
+@import url("https://fonts.googleapis.com/css?family=Source+Sans+Pro&display=swap");
+
+.color-primary-0 {
+  color: #27586b;
+} /* Main Primary color */
+.color-primary-1 {
+  color: #6d92a0;
+}
+.color-primary-2 {
+  color: #457485;
+}
+.color-primary-3 {
+  color: #103e50;
+}
+.color-primary-4 {
+  color: #022735;
+}
+
 html {
   height: 100%;
 }
@@ -5,6 +23,7 @@ html {
 body {
   margin: 8px;
   min-height: calc(100% - 16px);
+  font-family: "Source Sans Pro", sans-serif;
 }
 
 main {
@@ -12,7 +31,36 @@ main {
   margin: auto;
 }
 
+table {
+  border: 1px solid #27586b;
+  margin: 5px auto;
+}
+
 td {
   text-align: center;
-  outline: 1px solid darkslategray;
+  padding: 2px;
+}
+
+.topnav {
+  background-color: #022735;
+  overflow: hidden;
+}
+
+.topnav a {
+  float: left;
+  color: #f2f2f2;
+  text-align: center;
+  padding: 14px 16px;
+  text-decoration: none;
+  font-size: 17px;
+}
+
+.topnav a:hover {
+  background-color: #6d92a0;
+  color: black;
+}
+
+.topnav a.active {
+  background-color: #27586b;
+  color: white;
 }

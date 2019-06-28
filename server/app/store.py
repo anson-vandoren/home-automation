@@ -2,6 +2,7 @@ import csv
 import datetime
 import json
 import os
+
 from app import app
 
 CSV_FILE = "./readings.csv"
@@ -63,7 +64,9 @@ class CSVStore:
             return None
         with open(cls.filename, "r") as csv_file:
             for row in reversed(csv_file.readlines()):
-                timestamp, sensor_name, temperature, humidity = row.split(",")
+                timestamp, sensor_name, temperature, humidity = [
+                    tag.strip() for tag in row.split(",")
+                ]
                 if sensor_name == desired_sensor_name or desired_sensor_name is None:
                     return {
                         "location": sensor_name,

@@ -1,11 +1,11 @@
+import datetime
+
+import pytz
 from flask import abort, flash, jsonify, redirect, render_template, request, url_for
+
 from app import app
 from app.forms import LoginForm
 from app.store import CSVStore, SettingsStore
-
-import copy
-import datetime
-import pytz
 
 
 @app.route("/")
@@ -15,19 +15,15 @@ def index():
     show the main page
     """
     office_sensor = CSVStore.get_last_reading("office")
-    utc_timestamp = pytz.utc.localize(
-        datetime.datetime.strptime(
-            office_sensor["timestamp"], app.config["TIME_FORMAT"]
-        )
-    ).isoformat()
-    office_sensor["timestamp"] = utc_timestamp
-    # TODO: remove synthetic data
+    bedroom_sensor = CSVStore.get_last_reading("bedroom")
+    sensors = [office_sensor, bedroom_sensor]
+    for sensor in sensors:
+        utc_timestamp = pytz.utc.localize(
+            datetime.datetime.strptime(sensor["timestamp"], app.config["TIME_FORMAT"])
+        ).isoformat()
+        sensor["timestamp"] = utc_timestamp
 
-    bedroom_sensor = copy.copy(office_sensor)
-    bedroom_sensor["location"] = "bedroom"
-    bedroom_sensor["temperature"] = "35"
-
-    return render_template("index.html", sensors=[office_sensor, bedroom_sensor])
+    return render_template("index.html", sensors=sensors)
 
 
 @app.route("/sensor/add_reading", methods=["POST"])
@@ -47,7 +43,6 @@ def update_from_sensor():
 
     CSVStore.add_sensor_reading(sensor_name, temp, humidity)
 
-    sensor_name = request.json["sensor_name"]
     return jsonify({"status": "success"}), 200
 
 

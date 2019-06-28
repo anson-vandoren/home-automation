@@ -1,6 +1,6 @@
 {% extends "base.html" %} {% block content %}
 
-<h1 style="text-align: center;">Temperature Sensors</h1>
+<h1 style="text-align: center;">Temperature</h1>
 
 {% for sensor in sensors %}
 <table align="center">
@@ -12,9 +12,9 @@
   <tr>
     <td colspan="2">
       <i
-        ><span class="updatedTime" id="{{ sensor.location }}">{{
-          sensor.timestamp
-        }}</span></i
+        ><span class="updatedTime" id="{{ sensor.location }}"
+          >{{ sensor.timestamp }}</span
+        ></i
       >
     </td>
   </tr>
@@ -28,16 +28,14 @@
 
 <script>
   // convert last updated date to local date. comes from server as UTC
-  document.addEventListener('DOMContentLoaded', () => {
-    const timeElements = document.getElementsByClassName('updatedTime');
-    Array.prototype.forEach.call(timeElements, (el) => {
+  document.addEventListener("DOMContentLoaded", () => {
+    const timeElements = document.getElementsByClassName("updatedTime");
+    Array.prototype.forEach.call(timeElements, el => {
       console.log(el);
       const timestr = el.innerHTML;
-      const timeid = el.id;
-      const localizedDate = new Date(timestr).toLocaleString('en-US', {
-        timeZoneName: 'short',
-      });
-      document.getElementById(timeid).innerHTML = localizedDate;
+      document.getElementById(el.id).innerHTML = new Date(
+        timestr
+      ).toLocaleTimeString("en-US");
     });
   });
 </script>
