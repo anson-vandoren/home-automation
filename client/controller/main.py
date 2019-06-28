@@ -2,6 +2,7 @@ import utime
 import ssd1306
 import machine
 import network
+import urequests
 from rotary import Rotary
 from config import *
 
@@ -35,17 +36,31 @@ do_set = False
 
 last_click_millis = utime.ticks_ms()
 
-last_temp_poll_millis = utime.ticks_ms()
+last_temp_poll_millis = None
 temp_poll_duration = 60 * 1000  # one minute
 
-current_temp = 83
-setpoint_temp = 75
+current_temp = "--"
+current_rh = "--"
+setpoint_temp = "--"
 is_upstairs = True
 
 
 def time_elapsed(last_time, elapsed_time):
     """returns true of it's been `elapsed_time` since `last_time`"""
     return utime.ticks_diff(utime.ticks_ms(), last_time) > elapsed_time
+
+
+def upload_setpoint(new_setpoint):
+    try:
+        response = urequests.post(URL_SETPOINT, json={"newSetpoint": new_setpoint})
+    except OSError as e:
+        print("error on setpoint post:", str(e))
+        return
+    if response.status_code < 400:
+        new_setpoint = response.json().get("setpoint", None)
+        print("temp setpoint changed on server to", str(new_setpoint))
+    else:
+        print("setpoint update failed:", str(response.json()))
 
 
 def rotary_switch(pin):
@@ -70,8 +85,9 @@ def rotary_switch(pin):
             # disable rotary encoder
             setpoint_temp = r_temp.value()
             r_temp.disable()
-            # TODO: write new setpoint to server
-            # TODO: poll actual temperature
+
+            # send updated setpoint to server
+            upload_setpoint(setpoint_temp)
             # draw actual temperature
             write_temp(current_temp)
             write_menu()
@@ -85,7 +101,6 @@ r_sw.irq(trigger=machine.Pin.IRQ_RISING, handler=rotary_switch)
 
 
 def write_temp(val):
-
     temp_str = "{0:s}°".format(str(val))
     temp_str_len = large_font_writer.stringlen(temp_str)
 
@@ -109,7 +124,7 @@ def write_menu():
     display.fill_rect(0, 0, MENU_WIDTH, 64, 0)
 
     # set menu
-    labels = ["SET", str(setpoint_temp) + "F", "RH", "45%"]
+    labels = ["SET", str(setpoint_temp) + "F", "RH", "{0:s}%".format(str(current_rh))]
     for i, menu_label in enumerate(labels):
         str_len = small_font_writer.stringlen(menu_label)
         str_left = 1 + (MENU_WIDTH - str_len) // 2
@@ -117,8 +132,60 @@ def write_menu():
         small_font_writer.printstring(menu_label)
 
 
+def write_rh():
+    # blank out previous reading area
+    display.fill_rect(0, 48, MENU_WIDTH, 16, 0)
+    rh_str = "{0:s}%".format(str(current_rh))
+    rh_len = small_font_writer.stringlen(rh_str)
+    rh_left = 1 + (MENU_WIDTH - rh_len) // 2
+    small_font_writer.set_textpos(rh_left, 48)
+    small_font_writer.printstring(rh_str)
+
+
+def write_setpoint():
+    # blank out previous
+    display.fill_rect(0, 16, MENU_WIDTH, 16, 0)
+    sp_str = "{0:s}F".format(str(setpoint_temp))
+    sp_len = small_font_writer.stringlen(sp_str)
+    sp_left = 1 + (MENU_WIDTH - sp_len) // 2
+    small_font_writer.set_textpos(sp_left, 16)
+    small_font_writer.printstring(sp_str)
+
+
+def get_temperature():
+    try:
+        response = urequests.get(URL_GET_TEMP)
+    except OSError as e:
+        print("error on request: ", str(e))
+        return None, None
+    if response.status_code < 400:
+        temp = float(response.json()["temperature"])
+        rh = round(float(response.json()["humidity"]))
+        if TEMP_UNITS == "F":
+            temp = round(temp * 9 / 5 + 32)
+    else:
+        print("Temperature request API call failed:", response)
+        temp = rh = None
+
+    if response:
+        response.close()
+    return temp, rh
+
+
+def get_setpoint():
+    try:
+        response = urequests.get(URL_SETPOINT)
+    except OSError as e:
+        print("error on request:", str(e))
+        return None
+    if response.status_code < 400:
+        return int(response.json()["setpoint"])
+    else:
+        return None
+
+
 write_menu()
-write_temp(current_temp)
+write_temp("--")
 display.show()
 
 
@@ -133,7 +200,6 @@ def connect_wifi():
         sta_if.connect(WIFI_SSID, WIFI_PASSWORD)
         while not sta_if.isconnected():
             utime.sleep_ms(1000)
-    print("Network connected:", sta_if.ifconfig())
 
 
 while True:
@@ -147,8 +213,25 @@ while True:
             draw_control_box(color=1)
             display.show()
     else:
-        # TODO: poll current temperature periodically
-        if time_elapsed(last_temp_poll_millis, temp_poll_duration):
-            ...
+        # get current temperature/humidity from server
+        if last_temp_poll_millis is None or time_elapsed(
+            last_temp_poll_millis, temp_poll_duration
+        ):
+            connect_wifi()
+            new_temp, new_rh = get_temperature()
+            if new_temp is not None:
+                current_temp = new_temp
+            if new_rh is not None:
+                current_rh = new_rh
+            new_setpoint = get_setpoint()
+            if new_setpoint is not None:
+                setpoint_temp = new_setpoint
+
+            last_temp_poll_millis = utime.ticks_ms()
+
+            write_temp(current_temp)
+            write_rh()
+            write_setpoint()
+            display.show()
 
     utime.sleep_ms(50)

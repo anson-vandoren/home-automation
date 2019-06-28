@@ -11,3 +11,8 @@ CONTROL_WIDTH = const(_WIDTH - MENU_WIDTH)
 
 WIFI_SSID = "yourWiFiSSID"
 WIFI_PASSWORD = "yourWiFiPassword"
+
+URL_GET_TEMP = "http://api.example.com/current_temp"
+URL_GET_SETPOINT = "http://api.example.com/temp_setpoint"
+
+TEMP_UNITS = "F"
