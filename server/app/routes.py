@@ -14,6 +14,12 @@ def index():
     show the main page
     """
     office_sensor = CSVStore.get_last_reading("office")
+    utc_timestamp = pytz.utc.localize(
+        datetime.datetime.strptime(
+            office_sensor["timestamp"], app.config["TIME_FORMAT"]
+        )
+    ).isoformat()
+    office_sensor["timestamp"] = utc_timestamp
     return render_template("index.html", sensors=[office_sensor])
 
 
