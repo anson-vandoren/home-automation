@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
     {% if title %}
     <title>{{ title }} - Automated Home</title>
     {% else %}
@@ -12,11 +13,12 @@
       href="{{
     url_for('static', filename='styles/base.css') }}"
     />
-  <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}">
+      <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}">
+
   </head>
   <body>
     <div class="topnav">
-      <a {% if request.path == url_for('index') %}class="active"{% endif %} href="{{ url_for('index') }}">Home</a>
+      <a {% if request.path == url_for('index') %} class="active" {% endif %} href="{{ url_for('index') }}">Home</a>
       <a {% if request.path == url_for('raw_readings') %}class="active"{% endif %} href="{{ url_for('raw_readings') }}">Raw Data</a>
       <!-- <a href="{{ url_for('login') }}">Login</a> -->
     </div>

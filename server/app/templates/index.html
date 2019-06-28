@@ -28,6 +28,7 @@
 
 <script>
   // convert last updated date to local date. comes from server as UTC
+
   document.addEventListener("DOMContentLoaded", () => {
     const timeElements = document.getElementsByClassName("updatedTime");
     Array.prototype.forEach.call(timeElements, el => {
@@ -35,7 +36,11 @@
       const timestr = el.innerHTML;
       document.getElementById(el.id).innerHTML = new Date(
         timestr
-      ).toLocaleTimeString("en-US");
+      ).toLocaleTimeString("en-US", {
+        hour: "numeric",
+        minute: "numeric",
+        hour12: true
+      });
     });
   });
 </script>
